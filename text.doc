@@ -1,0 +1,45 @@
+const jwt = require('jsonwebtoken')
+const User = require("../models/userModel");
+const bcrypt = require("bcrypt");
+async function loginUser(req, res) {
+  try {
+    const {email, password} = req.body;
+    const existingUser = await User.findOne({ email });
+
+    if (!existingUser) {
+      // create a new user
+      const newUser = await User(req.body);
+
+      await newUser.save();
+
+      console.log("newUser", newUser);
+      res.json({
+        status: "success",
+        success: true,
+        data: {
+          user: newUser,
+        },
+      });
+
+      const isPasswordCorrect = await bcrypt.compare(password, existingUser.password);
+
+      if(!isPasswordCorrect) return res.status(404).json({msg : "Invalid Credentials", 
+      statusbar: "404 (bad request) (invalid credentials)"
+    })
+
+  const token = jwt.sign()
+
+
+    } else {
+      // user already exists.
+      // res.status(404).json({ msg: "User is already exists.", status: 'failed', success: false });
+      throw new Error("User already exists");
+    }
+  } catch (error) {
+    // 409 conflict
+    res.status(409).json({ message: error.message, 
+    statusbar : "409 (conflit) (catch error)" });
+  }
+}
+
+module.exports = { registerUser };
